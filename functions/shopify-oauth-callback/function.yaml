@@ -1,0 +1,13 @@
+entrypoint: index.js
+function_type: cloudflare_worker
+invoke_response_mode: passthrough
+name: Shopify OAuth Callback
+public_endpoint: true
+runtime_config:
+  SHOPIFY_STORE_DOMAIN: qz6zqy-se.myshopify.com
+  # Secrets — filled in locally right before `kapso push`, NOT committed.
+  # Client ID of the "kapso kenku italia" app:
+  SHOPIFY_API_KEY: "REPLACE_WITH_CLIENT_ID"
+  # Client Secret (shpss_...) of the same app:
+  SHOPIFY_API_SECRET: "REPLACE_WITH_CLIENT_SECRET"
+slug: shopify-oauth-callback

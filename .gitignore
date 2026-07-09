@@ -1,0 +1,6 @@
+# Never commit real secrets. runtime_config in function.yaml keeps placeholders;
+# real values are inserted locally only at `kapso push` time.
+.env
+.env.*
+*.secret
+secrets.*
