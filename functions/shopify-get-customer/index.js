@@ -19,7 +19,8 @@
 
 async function handler(request, env) {
   const cfg = readConfig(env);
-  if (cfg.error) return json({ error: cfg.error }, 500);
+  // Return 200 with ok:false — Kapso masks worker 5xx responses behind a generic 502.
+  if (cfg.error) return json({ ok: false, error: cfg.error }, 200);
 
   const body = await request.json().catch(() => ({}));
   const input = resolveInput(body);
@@ -32,13 +33,13 @@ async function handler(request, env) {
     if (input.customer_id) {
       const r = await api.get(`/customers/${encodeURIComponent(input.customer_id)}.json`);
       if (r.status === 404) return json({ found: false }, 200);
-      if (!r.ok) return json({ error: "shopify error", status: r.status, detail: r.body }, 502);
+      if (!r.ok) return json({ ok: false, error: "shopify error", shopify_status: r.status, detail: r.body }, 200);
       customer = r.body.customer ?? null;
     } else {
       const query = buildSearchQuery(input);
-      if (!query) return json({ error: "provide email, phone, or customer_id" }, 400);
+      if (!query) return json({ ok: false, error: "provide email, phone, or customer_id" }, 200);
       const r = await api.get(`/customers/search.json?query=${encodeURIComponent(query)}&limit=1`);
-      if (!r.ok) return json({ error: "shopify error", status: r.status, detail: r.body }, 502);
+      if (!r.ok) return json({ ok: false, error: "shopify error", shopify_status: r.status, detail: r.body }, 200);
       customer = r.body.customers?.[0] ?? null;
     }
 
@@ -54,7 +55,7 @@ async function handler(request, env) {
 
     return json(result, 200);
   } catch (e) {
-    return json({ error: "unhandled", detail: String(e) }, 500);
+    return json({ ok: false, error: "unhandled", detail: String(e) }, 200);
   }
 }
 

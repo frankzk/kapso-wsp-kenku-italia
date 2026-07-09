@@ -33,7 +33,7 @@
 
 async function handler(request, env) {
   const cfg = readConfig(env);
-  if (cfg.error) return json({ error: cfg.error }, 500);
+  if (cfg.error) return json({ ok: false, error: cfg.error }, 200);
 
   const body = await request.json().catch(() => ({}));
   const input = resolveInput(body);
@@ -101,11 +101,13 @@ async function handler(request, env) {
   try {
     const r = await api.post("/orders.json", { order });
     if (!r.ok) {
-      return json({ error: "shopify rejected the order", status: r.status, detail: r.body }, 502);
+      // Return 200 with ok:false — Kapso masks worker 5xx responses, which would
+      // otherwise hide Shopify's real rejection detail behind a generic 502.
+      return json({ ok: false, error: "shopify rejected the order", shopify_status: r.status, detail: r.body }, 200);
     }
     return json({ ok: true, order: slimOrder(r.body.order) }, 200);
   } catch (e) {
-    return json({ error: "unhandled", detail: String(e) }, 500);
+    return json({ ok: false, error: "unhandled", detail: String(e) }, 200);
   }
 }
 
