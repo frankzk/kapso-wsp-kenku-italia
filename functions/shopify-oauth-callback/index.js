@@ -19,9 +19,11 @@ export default {
     const url = new URL(request.url);
     const params = url.searchParams;
 
-    const apiKey = env.SHOPIFY_API_KEY;
-    const apiSecret = env.SHOPIFY_API_SECRET;
-    const expectedShop = env.SHOPIFY_STORE_DOMAIN;
+    // The Kapso CLI decamelizes runtime_config keys, so read snake_case first,
+    // then fall back to other casings to stay robust across CLI behavior.
+    const apiKey = env.shopify_api_key ?? env.SHOPIFY_API_KEY ?? env.shopifyApiKey;
+    const apiSecret = env.shopify_api_secret ?? env.SHOPIFY_API_SECRET ?? env.shopifyApiSecret;
+    const expectedShop = env.shopify_store_domain ?? env.SHOPIFY_STORE_DOMAIN ?? env.shopifyStoreDomain;
 
     if (!apiKey || !apiSecret) {
       return json({ error: "missing SHOPIFY_API_KEY / SHOPIFY_API_SECRET in runtime_config" }, 500);

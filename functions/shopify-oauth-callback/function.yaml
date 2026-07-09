@@ -3,11 +3,16 @@ function_type: cloudflare_worker
 invoke_response_mode: passthrough
 name: Shopify OAuth Callback
 public_endpoint: true
+# PARKED: Kapso function deploys currently fail for this project (even a hello-world
+# worker returns status: error). Use scripts/shopify-oauth-local.mjs to mint the
+# token in the meantime. Re-enable this once function deploys work.
+#
+# NOTE on keys: the Kapso CLI runs `decamelize` over request-body keys, so
+# camelCase keys below are stored (and injected into the worker) as snake_case,
+# e.g. shopifyApiKey -> shopify_api_key. The worker reads them resiliently.
 runtime_config:
-  SHOPIFY_STORE_DOMAIN: qz6zqy-se.myshopify.com
+  shopifyStoreDomain: qz6zqy-se.myshopify.com
   # Secrets — filled in locally right before `kapso push`, NOT committed.
-  # Client ID of the "kapso kenku italia" app:
-  SHOPIFY_API_KEY: "REPLACE_WITH_CLIENT_ID"
-  # Client Secret (shpss_...) of the same app:
-  SHOPIFY_API_SECRET: "REPLACE_WITH_CLIENT_SECRET"
+  shopifyApiKey: "REPLACE_WITH_CLIENT_ID"
+  shopifyApiSecret: "REPLACE_WITH_CLIENT_SECRET"
 slug: shopify-oauth-callback
