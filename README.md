@@ -101,3 +101,9 @@ scripts/
 Kapso function secrets are set in the dashboard (function page → **Secrets** tab),
 UPPERCASE, encrypted, exposed as `env.NAME`. Functions must be **deployed first**,
 then secrets added. Never commit real tokens/secrets to this repo.
+
+Verified: **`runtime_config` is NOT exposed to `env`.** Setting a value in
+`runtime_config` via the API and redeploying does not make it appear on `env` — only
+dashboard **Secrets** feed `env`. So the Shopify domain/token/version must be added in
+the Secrets tab, per function. (Also: the raw Platform API blocks non-curl clients
+with Cloudflare error 1010 — deploy scripts should use curl.)
