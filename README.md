@@ -35,14 +35,13 @@ external_api_log / webhook sources, not internal deploys).
 (like the agent session that built this repo) cannot deploy. Deploy from a
 user-authenticated path instead:
 
-- **Dashboard** (recommended): `app.kapso.ai` → Kenku Italia → Functions → New
-  Function → paste the code from this repo, set `runtime_config` there, deploy.
-  Bonus: secrets live in the dashboard, never in git.
-- **`kapso login` + `kapso push`** from a machine that can reach `app.kapso.ai`
-  (login mints a user-scoped project key, so `created_by_id` is set and deploy works).
+- **Dashboard** (the supported path): `app.kapso.ai` → Kenku Italia → Functions →
+  New Function → paste the code from this repo → deploy → then add secrets in the
+  function's **Secrets** tab. Secrets live in the dashboard, never in git.
 
-This repo stays the source of truth for function **code**; deployment + secrets are
-done through one of the user-authenticated paths above.
+Per the Kapso docs, **the CLI does not manage functions yet** — `kapso push` is not
+a deploy path for functions. The `functions/` dir here is the source of truth for the
+**code**; you deploy it through the dashboard and set secrets there.
 
 ## Getting the Shopify Admin API token (works today, no Kapso deploy needed)
 
@@ -65,19 +64,40 @@ Open the URL the script prints (while logged into the Italia store), approve, an
 the token appears in your terminal. Store it as `SHOPIFY_ITALIA_ADMIN_TOKEN` for
 the business functions. Treat it like a password — never commit it.
 
+## Business functions
+
+Deploy these via the dashboard (paste `index.js`, deploy, then add secrets):
+
+- **`shopify-get-customer`** — look up a customer by `email`, `phone`, or
+  `customer_id`; optionally include recent orders. Read-only.
+- **`shopify-create-order`** — create a **firm** order (`POST /orders.json`), reserving
+  inventory by default. Does not email the customer unless `send_receipt: true`.
+
+Both take secrets `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_ITALIA_ADMIN_TOKEN`, and optional
+`SHOPIFY_API_VERSION` (default `2025-07`).
+
+### Runtime contract (important)
+
+Kapso wraps the file and calls `handler(request, env)` — **do not use `export
+default`**. Caller input is read as JSON from the request body; as an **agent tool**
+the arguments arrive under `body.input` (the functions handle both shapes). Secrets
+are read from `env.SHOPIFY_*` and are set in the dashboard **Secrets** tab *after* the
+first deploy.
+
 ## Layout
 
 ```
 functions/
-  shopify-oauth-callback/   # PARKED Kapso worker (same OAuth flow, for when deploys work)
+  shopify-get-customer/     # read a customer (+ recent orders)
+  shopify-create-order/     # create a firm order
+  shopify-oauth-callback/   # SUPERSEDED — token was minted locally; see scripts/ below
 scripts/
-  shopify-oauth-local.mjs   # ACTIVE: local, dependency-free OAuth token minter
+  shopify-oauth-local.mjs   # local, dependency-free OAuth token minter (already used)
+  shopify-verify.mjs        # read-only token smoke test
 ```
 
 ## Secrets
 
-There is no CLI secret store in Kapso — a function's only config channel is
-`runtime_config` in `function.yaml`, which lives in the repo. Real secret values are
-therefore kept as placeholders in committed files and injected locally only at
-`kapso push` time. Never commit real tokens/secrets. (Note: the CLI decamelizes
-`runtime_config` keys, so `shopifyApiKey` is stored/injected as `shopify_api_key`.)
+Kapso function secrets are set in the dashboard (function page → **Secrets** tab),
+UPPERCASE, encrypted, exposed as `env.NAME`. Functions must be **deployed first**,
+then secrets added. Never commit real tokens/secrets to this repo.
