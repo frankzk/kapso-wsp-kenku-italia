@@ -15,14 +15,38 @@ Kapso (WhatsApp) × Shopify integration for the **Kenku Italia** project.
 ## Status / known blocker
 
 **Kapso function deploys currently fail for this project.** Pushing any function —
-including a trivial hello-world worker — leaves it at `status: error` with no error
-surfaced by the API or Rails logs. Until that is resolved, functions cannot be
-deployed here. This blocks the Kapso-hosted OAuth callback and the business
-functions alike.
+including a trivial hello-world worker — leaves it at `status: error`. This blocks
+the Kapso-hosted OAuth callback and the business functions alike.
 
-Next step for the blocker (parked by decision): get the Cloudflare deploy error
-from the Kapso dashboard (`app.kapso.ai` → Kenku Italia → Functions), or confirm
-with Kapso that function hosting is enabled for this project/plan.
+Diagnosis performed against the raw Platform API (`api.kapso.ai/platform/v1`,
+`X-API-Key`):
+
+- `POST /functions` (hello-world) → `201`, `status: draft`. Function is created fine.
+- `POST /functions/{id}/deploy` → `202 { status: deploying }`, then within ~1s
+  `GET /functions/{id}` returns `status: error`.
+- **No error detail is surfaced anywhere reachable:** the function object has no
+  error field, `endpoint_url` stays `null`, and `kapso logs search --problems-only`
+  for `deploy`/`error`/`cloudflare` returns 0 events (Rails log search only covers
+  external_api_log / webhook sources, not the internal Kapso→Cloudflare deploy).
+- **`public_endpoint: true` is silently downgraded to `false` on create** — a strong
+  signal that public function hosting is gated/not entitled for this project.
+- No plan/entitlement endpoint exists on the Platform API (all of `plan`,
+  `subscription`, `entitlements`, `usage`, `billing`, … return `404`).
+
+**Most likely cause: function hosting is not enabled on the current (free) plan.**
+Kapso functions are hosted Cloudflare Workers (paid infra), the public-endpoint flag
+is being refused, and the deploy fails server-side with no user-facing reason — all
+consistent with an entitlement limit rather than a code bug. Not yet proven, because
+the only place the real deploy error / plan status is visible is the dashboard.
+
+To confirm definitively (both need `app.kapso.ai`, which some sandboxes block):
+- `app.kapso.ai` → Kenku Italia → Functions → open the failed deploy for the error.
+- `app.kapso.ai` → billing/plan, or Kapso pricing/support: does the current plan
+  include Functions? If not, upgrade or use an alternative host (see below).
+
+If functions stay unavailable, the WhatsApp↔Shopify logic can instead run on any
+host reachable by a Kapso webhook/workflow (e.g. your own serverless endpoint),
+using the same Shopify token; only the *hosting* changes, not the integration.
 
 ## Getting the Shopify Admin API token (works today, no Kapso deploy needed)
 
