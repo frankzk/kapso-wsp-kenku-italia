@@ -12,41 +12,37 @@ Kapso (WhatsApp) × Shopify integration for the **Kenku Italia** project.
 > write to it. All Shopify access for this project targets the **Italia** store
 > above, via its own Admin API credentials.
 
-## Status / known blocker
+## Function deploys: root cause & how to deploy
 
-**Kapso function deploys currently fail for this project.** Pushing any function —
-including a trivial hello-world worker — leaves it at `status: error`. This blocks
-the Kapso-hosted OAuth callback and the business functions alike.
+**Root cause (confirmed): function deploys only work when the function is created by
+a *user*, not by the bare `KAPSO_API_KEY`.** It is NOT a plan limitation — the
+project is on Kapso Pro (Functions included) and a user-created function deploys and
+invokes fine.
 
-Diagnosis performed against the raw Platform API (`api.kapso.ai/platform/v1`,
-`X-API-Key`):
+Side-by-side proof on this project (`f5fe95e9-…`):
 
-- `POST /functions` (hello-world) → `201`, `status: draft`. Function is created fine.
-- `POST /functions/{id}/deploy` → `202 { status: deploying }`, then within ~1s
-  `GET /functions/{id}` returns `status: error`.
-- **No error detail is surfaced anywhere reachable:** the function object has no
-  error field, `endpoint_url` stays `null`, and `kapso logs search --problems-only`
-  for `deploy`/`error`/`cloudflare` returns 0 events (Rails log search only covers
-  external_api_log / webhook sources, not the internal Kapso→Cloudflare deploy).
-- **`public_endpoint: true` is silently downgraded to `false` on create** — a strong
-  signal that public function hosting is gated/not entitled for this project.
-- No plan/entitlement endpoint exists on the Platform API (all of `plan`,
-  `subscription`, `entitlements`, `usage`, `billing`, … return `404`).
+| Function | Created via | `created_by_id` | Deploy result |
+| --- | --- | --- | --- |
+| `hello-world-test` | Dashboard (user) | `78f54a1c-…` | `deployed`, `/invoke` returns 200 |
+| `diag-hello*` | `KAPSO_API_KEY` (raw Platform API / `kapso push`) | `null` | `status: error`, `endpoint_url: null` |
 
-**Most likely cause: function hosting is not enabled on the current (free) plan.**
-Kapso functions are hosted Cloudflare Workers (paid infra), the public-endpoint flag
-is being refused, and the deploy fails server-side with no user-facing reason — all
-consistent with an entitlement limit rather than a code bug. Not yet proven, because
-the only place the real deploy error / plan status is visible is the dashboard.
+Every function created with the environment `KAPSO_API_KEY` lands with
+`created_by_id: null` and the Kapso→Cloudflare deploy step fails with no error
+surfaced by the Platform API (no error field; `kapso logs` only covers
+external_api_log / webhook sources, not internal deploys).
 
-To confirm definitively (both need `app.kapso.ai`, which some sandboxes block):
-- `app.kapso.ai` → Kenku Italia → Functions → open the failed deploy for the error.
-- `app.kapso.ai` → billing/plan, or Kapso pricing/support: does the current plan
-  include Functions? If not, upgrade or use an alternative host (see below).
+**Implication:** `kapso push` from an API-key-only, `app.kapso.ai`-blocked sandbox
+(like the agent session that built this repo) cannot deploy. Deploy from a
+user-authenticated path instead:
 
-If functions stay unavailable, the WhatsApp↔Shopify logic can instead run on any
-host reachable by a Kapso webhook/workflow (e.g. your own serverless endpoint),
-using the same Shopify token; only the *hosting* changes, not the integration.
+- **Dashboard** (recommended): `app.kapso.ai` → Kenku Italia → Functions → New
+  Function → paste the code from this repo, set `runtime_config` there, deploy.
+  Bonus: secrets live in the dashboard, never in git.
+- **`kapso login` + `kapso push`** from a machine that can reach `app.kapso.ai`
+  (login mints a user-scoped project key, so `created_by_id` is set and deploy works).
+
+This repo stays the source of truth for function **code**; deployment + secrets are
+done through one of the user-authenticated paths above.
 
 ## Getting the Shopify Admin API token (works today, no Kapso deploy needed)
 
