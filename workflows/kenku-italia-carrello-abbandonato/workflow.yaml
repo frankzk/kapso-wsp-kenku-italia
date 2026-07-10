@@ -1,0 +1,17 @@
+name: Kenku Italia - Carrello Abbandonato
+slug: kenku-italia-carrello-abbandonato
+workflow_id: 0fd05aa0-04d2-4aa5-b00d-eaf5d09f9936
+status: draft
+definition: definition.json
+trigger:
+  id: df3f3411-8b64-4dc7-bf53-a7cc08a264d0
+  type: project_event
+  event_name: checkout.created
+  active: false
+timing: reminders at 1h, 6h, 24h, 48h (wait_for_response has_timeout as native delay)
+recovery_check: shopify-check-recovered (1b359343-44f1-4861-bb07-239c3a2341d3) as decide node
+TODO:
+  - Swap the 4 send_text nodes to send_template (recupero_carrello) once the WhatsApp
+    template exists — send_template requires a real template_id (needs the WABA number).
+    send_text is a placeholder so the timing graph is testable now; outside the 24h
+    window only a template actually delivers.

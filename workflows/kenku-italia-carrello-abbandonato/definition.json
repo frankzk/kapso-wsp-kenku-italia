@@ -1,0 +1,347 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 40
+      },
+      "data": {
+        "node_type": "start",
+        "config": {}
+      }
+    },
+    {
+      "id": "set_variable_1783653494181",
+      "type": "flow-node",
+      "position": {
+        "x": 460,
+        "y": 900
+      },
+      "data": {
+        "node_type": "set_variable",
+        "config": {
+          "variable_name": "cart_flow_done",
+          "variable_value": "true",
+          "value_type": "string"
+        }
+      }
+    },
+    {
+      "id": "wait_for_response_1783653493282",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 160
+      },
+      "data": {
+        "node_type": "wait_for_response",
+        "config": {
+          "save_response_to": "reply_1h",
+          "has_timeout": true,
+          "timeout_seconds": 3600
+        }
+      }
+    },
+    {
+      "id": "decide_1783653493283",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 300
+      },
+      "data": {
+        "node_type": "decide",
+        "config": {
+          "decision_type": "function",
+          "function_id": "1b359343-44f1-4861-bb07-239c3a2341d3",
+          "conditions": [
+            {
+              "label": "recovered",
+              "description": "Ordine gia effettuato: ferma i promemoria"
+            },
+            {
+              "label": "pending",
+              "description": "Nessun ordine: invia il promemoria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send_text_1783653493284",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 440
+      },
+      "data": {
+        "node_type": "send_text",
+        "config": {
+          "message": "Ciao {{context.event.properties.customer_name}}! 🛒 Hai lasciato {{context.event.properties.line_items_summary}} nel carrello da Kenku Italia. Spedizione gratuita e pagamento alla consegna in 2-4 giorni. Vuoi completare l'ordine? Rispondi *Sì* e ci pensiamo noi!",
+          "to_phone_number": "{{context.event.properties.customer_phone}}",
+          "delay_seconds": 0
+        }
+      }
+    },
+    {
+      "id": "wait_for_response_1783653493292",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 600
+      },
+      "data": {
+        "node_type": "wait_for_response",
+        "config": {
+          "save_response_to": "reply_6h",
+          "has_timeout": true,
+          "timeout_seconds": 18000
+        }
+      }
+    },
+    {
+      "id": "decide_1783653493293",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 740
+      },
+      "data": {
+        "node_type": "decide",
+        "config": {
+          "decision_type": "function",
+          "function_id": "1b359343-44f1-4861-bb07-239c3a2341d3",
+          "conditions": [
+            {
+              "label": "recovered",
+              "description": "Ordine gia effettuato: ferma i promemoria"
+            },
+            {
+              "label": "pending",
+              "description": "Nessun ordine: invia il promemoria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send_text_1783653493294",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 880
+      },
+      "data": {
+        "node_type": "send_text",
+        "config": {
+          "message": "Ci sei ancora? 😊 Il tuo {{context.event.properties.line_items_summary}} ti aspetta. Pagamento comodo alla consegna (contrassegno) e spedizione gratis. Vuoi completare l'ordine?",
+          "to_phone_number": "{{context.event.properties.customer_phone}}",
+          "delay_seconds": 0
+        }
+      }
+    },
+    {
+      "id": "wait_for_response_1783653493302",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 1040
+      },
+      "data": {
+        "node_type": "wait_for_response",
+        "config": {
+          "save_response_to": "reply_24h",
+          "has_timeout": true,
+          "timeout_seconds": 64800
+        }
+      }
+    },
+    {
+      "id": "decide_1783653493303",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 1180
+      },
+      "data": {
+        "node_type": "decide",
+        "config": {
+          "decision_type": "function",
+          "function_id": "1b359343-44f1-4861-bb07-239c3a2341d3",
+          "conditions": [
+            {
+              "label": "recovered",
+              "description": "Ordine gia effettuato: ferma i promemoria"
+            },
+            {
+              "label": "pending",
+              "description": "Nessun ordine: invia il promemoria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send_text_1783653493304",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 1320
+      },
+      "data": {
+        "node_type": "send_text",
+        "config": {
+          "message": "Ultimo promemoria 💛 {{context.event.properties.line_items_summary}} è ancora disponibile. Vuoi che te lo spediamo? Paghi solo alla consegna. Scrivici *Sì*.",
+          "to_phone_number": "{{context.event.properties.customer_phone}}",
+          "delay_seconds": 0
+        }
+      }
+    },
+    {
+      "id": "wait_for_response_1783653493312",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 1480
+      },
+      "data": {
+        "node_type": "wait_for_response",
+        "config": {
+          "save_response_to": "reply_48h",
+          "has_timeout": true,
+          "timeout_seconds": 86400
+        }
+      }
+    },
+    {
+      "id": "decide_1783653493313",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 1620
+      },
+      "data": {
+        "node_type": "decide",
+        "config": {
+          "decision_type": "function",
+          "function_id": "1b359343-44f1-4861-bb07-239c3a2341d3",
+          "conditions": [
+            {
+              "label": "recovered",
+              "description": "Ordine gia effettuato: ferma i promemoria"
+            },
+            {
+              "label": "pending",
+              "description": "Nessun ordine: invia il promemoria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send_text_1783653493314",
+      "type": "flow-node",
+      "position": {
+        "x": 160,
+        "y": 1760
+      },
+      "data": {
+        "node_type": "send_text",
+        "config": {
+          "message": "Stiamo per chiudere il tuo carrello. Se vuoi {{context.event.properties.line_items_summary}} con spedizione gratuita e pagamento alla consegna, scrivici *Sì* adesso!",
+          "to_phone_number": "{{context.event.properties.customer_phone}}",
+          "delay_seconds": 0
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "start",
+      "target": "wait_for_response_1783653493282",
+      "label": "next"
+    },
+    {
+      "source": "wait_for_response_1783653493282",
+      "target": "decide_1783653493283",
+      "label": "next"
+    },
+    {
+      "source": "decide_1783653493283",
+      "target": "set_variable_1783653494181",
+      "label": "recovered"
+    },
+    {
+      "source": "decide_1783653493283",
+      "target": "send_text_1783653493284",
+      "label": "pending"
+    },
+    {
+      "source": "send_text_1783653493284",
+      "target": "wait_for_response_1783653493292",
+      "label": "next"
+    },
+    {
+      "source": "wait_for_response_1783653493292",
+      "target": "decide_1783653493293",
+      "label": "next"
+    },
+    {
+      "source": "decide_1783653493293",
+      "target": "set_variable_1783653494181",
+      "label": "recovered"
+    },
+    {
+      "source": "decide_1783653493293",
+      "target": "send_text_1783653493294",
+      "label": "pending"
+    },
+    {
+      "source": "send_text_1783653493294",
+      "target": "wait_for_response_1783653493302",
+      "label": "next"
+    },
+    {
+      "source": "wait_for_response_1783653493302",
+      "target": "decide_1783653493303",
+      "label": "next"
+    },
+    {
+      "source": "decide_1783653493303",
+      "target": "set_variable_1783653494181",
+      "label": "recovered"
+    },
+    {
+      "source": "decide_1783653493303",
+      "target": "send_text_1783653493304",
+      "label": "pending"
+    },
+    {
+      "source": "send_text_1783653493304",
+      "target": "wait_for_response_1783653493312",
+      "label": "next"
+    },
+    {
+      "source": "wait_for_response_1783653493312",
+      "target": "decide_1783653493313",
+      "label": "next"
+    },
+    {
+      "source": "decide_1783653493313",
+      "target": "set_variable_1783653494181",
+      "label": "recovered"
+    },
+    {
+      "source": "decide_1783653493313",
+      "target": "send_text_1783653493314",
+      "label": "pending"
+    },
+    {
+      "source": "send_text_1783653493314",
+      "target": "set_variable_1783653494181",
+      "label": "next"
+    }
+  ]
+}
