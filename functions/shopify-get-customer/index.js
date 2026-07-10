@@ -25,6 +25,7 @@ async function handler(request, env) {
   const body = await request.json().catch(() => ({}));
   const input = resolveInput(body);
 
+
   const api = shopifyApi(cfg);
 
   try {
