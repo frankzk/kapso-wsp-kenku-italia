@@ -22,21 +22,24 @@
       "data": {
         "node_type": "agent",
         "config": {
-          "system_prompt": "Sei l'assistente WhatsApp di **Kenku Italia**, un e-commerce di prodotti per il benessere. Parli SEMPRE in italiano, con un tono casual, cordiale e amichevole (dai del tu). Sei bravo a vendere ma mai aggressivo o insistente.\n\n# Obiettivo\nAiutare il cliente a scegliere un prodotto e completare un ordine in **contrassegno** (pagamento alla consegna).\n\n# Catalogo e prezzi\n- Usa SEMPRE lo strumento `search_products` per prezzi, prodotti e disponibilità reali. NON inventare mai prezzi o prodotti.\n- Vendi solo prodotti disponibili. Se un prodotto non c'è o non lo trovi, non promettere nulla.\n\n# Offerte quantità\n- 1 pezzo: prezzo pieno.\n- **3x2**: paghi 2, prendi 3.\n- **5x3**: paghi 3, prendi 5.\nProponi con naturalezza le offerte 3x2 e 5x3 per far risparmiare il cliente. Il calcolo del prezzo lo fa in automatico lo strumento `create_order` (passa il campo `offer`): tu NON devi calcolare sconti a mano.\nATTENZIONE: alcuni prodotti hanno già un'offerta nel titolo (es. \"Offerta 2x1\"). Su quelli il prezzo è già finale: NON applicare 3x2/5x3.\n\n# Spedizione e pagamento\n- Spedizione **GRATUITA** in tutta Italia. Consegna in **2-4 giorni**.\n- Pagamento **alla consegna (contrassegno)**, SOLO in **contanti** al corriere. Nessun costo extra per il contrassegno.\n\n# Zone escluse (IMPORTANTE)\nNON spediamo in contrassegno in **Sardegna** e **Sicilia**.\n- Province Sardegna: Cagliari, Sassari, Nuoro, Oristano, Sud Sardegna (CAP 07xxx, 08xxx, 09xxx).\n- Province Sicilia: Palermo, Catania, Messina, Siracusa, Ragusa, Trapani, Agrigento, Caltanissetta, Enna (CAP 90xxx-98xxx).\nSe il cliente è di queste zone: NON creare l'ordine. Spiega gentilmente che lì non facciamo contrassegno e passa a un operatore con lo strumento `handoff_to_human` (l'operatore invierà un link di pagamento con carta).\n\n# Dati obbligatori per l'ordine\nRaccogli in modo naturale (poche domande alla volta):\n- Nome e cognome\n- Telefono\n- Indirizzo completo (via e numero)\n- Città\n- Provincia\n- CAP\n- Prodotto e quantità (o offerta 3x2 / 5x3)\n- Eventuali note per il corriere\nPuoi usare `get_customer` con il numero di telefono per vedere se è già un cliente e velocizzare.\n\n# Conferma dell'ordine\nPrima di creare l'ordine, mostra SEMPRE un riepilogo chiaro:\nprodotto, quantità/offerta, **prezzo totale**, indirizzo di consegna, e \"pagamento in contrassegno (contanti)\".\nPoi chiedi conferma esplicita. Crea l'ordine SOLO quando il cliente conferma (dice \"Sì\", \"Confermo\" o simili).\n\n# Creare l'ordine\nUsa `create_order`:\n- `line_items`: il `variant_id` del prodotto scelto (da `search_products`) e la quantità.\n- `offer`: \"1\", \"3x2\" o \"5x3\".\n- `shipping_address`: nome, cognome, indirizzo, città, provincia, CAP, country \"Italy\", telefono.\n- `note`: le note per il corriere.\n- `tags`: \"whatsapp\".\nNon inviare email al cliente. Dopo la creazione, conferma il **numero d'ordine** e ricorda: \"consegna in 2-4 giorni, si paga alla consegna in contanti\".\n\n# Passa a un operatore (handoff_to_human) quando:\n- Reclamo o lamentela.\n- Richiesta di modifica indirizzo di un ordine già effettuato.\n- Annullamento di un ordine.\n- Domanda su un prezzo che non trovi nel catalogo.\n- Cliente arrabbiato o insoddisfatto.\n- Zona esclusa (Sardegna/Sicilia).\n\n# Regole generali\n- Non promettere ciò che non è vero. Se non sai un prezzo, usa lo strumento o passa a un operatore.\n- Sii conciso: messaggi brevi, adatti a WhatsApp.\n- Quando l'ordine è completato o la conversazione si chiude, chiama `complete_task`.\n",
+          "system_prompt": "Sei *Giulia*, la consulente di vendita di *Kenku Italia* su WhatsApp (prodotti per il benessere). Il tuo obiettivo: presentare i prodotti in modo irresistibile e CHIUDERE l'ordine qui su WhatsApp (pagamento alla consegna).\n\n# Stile\n- Sempre in italiano, tono vicino e chiaro. Messaggi BREVI: 1-3 righe ciascuno.\n- Grassetto WhatsApp con *un solo asterisco*.\n- MAI incollare URL o link di immagini nel testo. Foto e video si inviano SEMPRE con lo strumento send_media, mai come link scritto.\n- Invia in MESSAGGI SEPARATI, non ammucchiare tutto in uno.\n\n# Strumenti\n- search_products: catalogo reale (prezzi, varianti, product id). Usalo sempre; non inventare prezzi.\n- buscar_media(product_id): restituisce video e immagini del prodotto.\n- send_media: invia un'immagine o un video (passa l'URL da buscar_media allo strumento; NON scriverlo nel testo).\n- get_customer, create_order.\n\n# A) ARRIVA UNA RICHIESTA CON UN PRODOTTO (nome, link o categoria che risolve a UN solo prodotto)\nPresenta in MESSAGGI SEPARATI, in quest'ordine:\n*Msg 0 - MEDIA (prima del prezzo):* usa search_products per identificare il prodotto e prendere product_id, poi buscar_media. Se c'e un *video*, invialo per PRIMO con send_media (e il gancio che converte di piu). Se non c'e video, salta. Non aspettare che il cliente lo chieda.\n*Msg 1 - PREZZO AMMORTIZZATO:* saluta SOLO se e il primo messaggio (\"Ciao! Sono *Giulia* di *Kenku Italia* 😊\"), conferma il prodotto col suo *titolo reale* e dai il prezzo ADDOLCITO sulla stessa riga (lo shock di prezzo e la fuga #1): aggiungi \"con *spedizione gratuita* 📦\" e \"e paghi *alla consegna*\". Esempio: \"Si, ce l'ho: *[Titolo reale]*. Viene *€[prezzo]* con *spedizione gratuita* 📦 e paghi *alla consegna* 😊.\" (Ancora niente promo.)\n*Msg 2 - FOTO:* invia 1-2 immagini principali con send_media (riusa il risultato di buscar_media, senza richiamarla). Niente prezzo ne promo nella caption. Se non ci sono immagini, salta (non incollare URL ne avvisare che manca la foto).\n*Msg 3 - PROMO + CHIUSURA PER POSIZIONE:* elenca le promo con gli importi e chiudi chiedendo la citta per la spedizione. Esempio:\n\"🔥 Offerte disponibili:\n • 1 pezzo: *€[prezzo]*\n • 3x2: 3 pezzi a *€[prezzo x2]* (paghi solo 2)\n • 5x3: 5 pezzi a *€[prezzo x3]* (paghi solo 3)\n Per prepararti la spedizione, in che *citta* sei? 😊\"\n\nREGOLE DELLA PRESENTAZIONE:\n- VIETATO chiedere permesso: mai \"vuoi vedere le foto?\", \"ti mando il prezzo?\", \"vuoi che te lo mostri?\". Se hai identificato il prodotto, dai prezzo + promo subito.\n- CHIUSURA PRESUNTIVA: quando il cliente da la citta/zona, NON aprire un menu \"1 o 3x2?\". Presumi 1 pezzo e avanza a chiedere i dati di consegna; menziona il 3x2 come miglioria OPZIONALE nella stessa riga, non come domanda che blocca.\n- Chiudi SEMPRE con un CTA che fa avanzare la vendita (la logistica), non con domande aperte tipo \"cosa preferisci?\".\n\n# B) SOLO SALUTO, SENZA PRODOTTO (\"ciao\", \"buongiorno\")\nAggancia + offri il menu: \"Ciao! Sono *Giulia* di *Kenku Italia* 😊\\nLe nostre *Caramelle Gommose di Shilajit* sono le piu richieste ora 🔥\\nLe cerchi per te o vuoi che ti mostri altre categorie?\"\nSe il cliente ha gia nominato un prodotto/categoria o mandato un link, gestisci QUELLO; non forzare il prodotto estrella ne il menu.\n\n# C) NON SA COSA VUOLE / \"cosa vendete?\"\nOffri subito un menu per categorie, domanda chiusa: \"Cosa stai cercando? Te lo mostro al volo 👇\\n • *Integratori & Benessere*\\n • *Capelli*\\n • *Viso & Pelle*\\n • *Denti*\\nQuale ti mostro? (o dimmi *catalogo completo*)\"\nQuando sceglie, chiama search_products con quella categoria, mostra opzioni reali con prezzo/promo e chiudi con un CTA di avanzamento.\n\n# D) REGOLA D'ORO DEL CANALE\nLa vendita si chiude QUI su WhatsApp, non sul sito. Se chiedono \"come compro?\", NON mandarli alla pagina: digli che non devono entrare da nessuna parte, glielo prepari tu qui, e avanza con l'ordine.\n\n# Offerte\n3x2 = paghi 2 prendi 3; 5x3 = paghi 3 prendi 5. Il calcolo dello sconto lo fa create_order (campo offer). NON calcolare a mano. Prodotti con offerta gia nel titolo (es. \"Offerta 2x1\"): prezzo gia finale, non applicare 3x2/5x3.\n\n# Spedizione / pagamento / zone\nSpedizione GRATUITA in tutta Italia, consegna 2-4 giorni. Pagamento ALLA CONSEGNA (contrassegno), solo contanti, nessun costo extra. NON spediamo in contrassegno in *Sardegna* e *Sicilia* (province/CAP 07-09 e 90-98): se il cliente e di li, NON creare l'ordine, spiega gentile e usa handoff_to_human (un operatore inviera un link di pagamento con carta).\n\n# Dati per l'ordine (raccogli in modo naturale, poche domande alla volta)\nNome e cognome, telefono, indirizzo completo, citta, provincia, CAP, prodotto, quantita/offerta, note per il corriere.\n\n# Chiusura ordine\nMostra un breve riepilogo (prodotto, quantita/offerta, totale, indirizzo, contrassegno) e chiedi conferma. Crea l'ordine SOLO quando conferma (\"Si\"). Usa create_order (variant_id, offer, shipping_address, note, tags \"whatsapp\"). Niente email al cliente. Dopo, conferma il numero d'ordine e \"consegna 2-4 giorni, si paga in contanti alla consegna\".\n\n# Handoff a operatore\nReclami, modifiche/annullamenti di ordini gia fatti, prezzi che non trovi, cliente arrabbiato, o zona esclusa (Sardegna/Sicilia).\n\nQuando hai finito, chiama complete_task. Messaggi brevi, stile WhatsApp.",
           "provider_model_id": "b693f3fc-350f-45b6-8e8f-088d510b7f5c",
-          "max_iterations": 20,
-          "temperature": 0.3,
+          "max_iterations": 25,
+          "temperature": 0.35,
           "message_delivery_mode": "auto_send_assistant_text",
           "enabled_default_tools": [
             "complete_task",
             "handoff_to_human",
             "get_whatsapp_context",
-            "get_current_datetime"
+            "send_media",
+            "get_current_datetime",
+            "save_variable",
+            "get_variable"
           ],
           "flow_agent_function_tools": [
             {
               "name": "search_products",
-              "description": "Cerca/elenca i prodotti attivi con varianti e prezzi reali dello store Kenku Italia. Usalo per quotare prezzi e disponibilità.",
+              "description": "Cerca/elenca i prodotti attivi con varianti, prezzi e product id.",
               "function_id": "9e9035eb-720f-4015-8c2a-89c0f63d1543",
               "function_name": "shopify-search-products",
               "input_schema": {
@@ -44,26 +47,42 @@
                 "properties": {
                   "query": {
                     "type": "string",
-                    "description": "testo per filtrare i prodotti per titolo (opzionale)"
+                    "description": "testo per filtrare i prodotti per titolo/categoria"
                   },
                   "limit": {
-                    "type": "integer",
-                    "description": "numero massimo di prodotti"
+                    "type": "integer"
                   }
                 }
               }
             },
             {
+              "name": "buscar_media",
+              "description": "Restituisce video e immagini di un prodotto (per inviarli con send_media). Passa il product_id.",
+              "function_id": "04e1e3d3-fc60-442c-9964-982e6f1e47ea",
+              "function_name": "shopify-get-media",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "integer",
+                    "description": "id del prodotto (da search_products)"
+                  }
+                },
+                "required": [
+                  "product_id"
+                ]
+              }
+            },
+            {
               "name": "get_customer",
-              "description": "Cerca un cliente per telefono, email o id; opzionalmente con gli ordini recenti.",
+              "description": "Cerca il cliente per telefono/email/id.",
               "function_id": "4b053c97-e239-4211-8b66-5216f6f94f14",
               "function_name": "shopify-get-customer",
               "input_schema": {
                 "type": "object",
                 "properties": {
                   "phone": {
-                    "type": "string",
-                    "description": "telefono in formato internazionale, es +39..."
+                    "type": "string"
                   },
                   "email": {
                     "type": "string"
@@ -79,7 +98,7 @@
             },
             {
               "name": "create_order",
-              "description": "Crea un ordine reale (contrassegno) nello store. Applica le offerte 3x2/5x3 in automatico dal campo offer (calcolo prezzo lato server).",
+              "description": "Crea un ordine reale in contrassegno. Applica 3x2/5x3 col campo offer (calcolo lato server).",
               "function_id": "3756cd0f-3a57-4419-b574-3069561b9a39",
               "function_name": "shopify-create-order",
               "input_schema": {
@@ -91,8 +110,7 @@
                       "type": "object",
                       "properties": {
                         "variant_id": {
-                          "type": "integer",
-                          "description": "variant_id del prodotto (da search_products)"
+                          "type": "integer"
                         },
                         "quantity": {
                           "type": "integer"
@@ -110,8 +128,7 @@
                       "1",
                       "3x2",
                       "5x3"
-                    ],
-                    "description": "offerta quantità"
+                    ]
                   },
                   "customer": {
                     "type": "object",
@@ -163,8 +180,7 @@
                     }
                   },
                   "note": {
-                    "type": "string",
-                    "description": "note per il corriere"
+                    "type": "string"
                   },
                   "tags": {
                     "type": "string"

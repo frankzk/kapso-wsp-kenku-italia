@@ -12,8 +12,11 @@ trigger:
   type: inbound_message
   phone_number_id: "597907523413541"   # Sandbox WhatsApp
   active: false          # enable when going live
+persona: Giulia (consulente vendite, italiano casual)
+playbook: presentazione prodotto (media-first, prezzo ammortizzato, promo, chiusura presuntiva)
 agent_tools:
   - search_products  -> function shopify-search-products (9e9035eb-720f-4015-8c2a-89c0f63d1543)
   - get_customer     -> function shopify-get-customer   (4b053c97-e239-4211-8b66-5216f6f94f14)
   - create_order     -> function shopify-create-order   (3756cd0f-3a57-4419-b574-3069561b9a39)
-  - handoff_to_human (default tool)
+  - buscar_media  -> shopify-get-media    (04e1e3d3-fc60-442c-9964-982e6f1e47ea)
+  - send_media (default tool) + handoff_to_human (default tool)
