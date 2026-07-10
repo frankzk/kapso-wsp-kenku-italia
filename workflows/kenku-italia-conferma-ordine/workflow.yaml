@@ -1,0 +1,19 @@
+name: Kenku Italia - Conferma Ordine
+slug: kenku-italia-conferma-ordine
+workflow_id: cc189d57-d3b8-44b7-a166-e9d49b46f2e4
+status: draft
+definition: definition.json
+model: claude-sonnet-5
+trigger:
+  id: 3065b0ca-77a9-4f35-b566-14016283562a
+  type: project_event
+  event_name: order.created
+  active: false     # proactive: needs a real WABA number + approved template to go live
+agent_tools:
+  - update_order -> shopify-update-order (ad31e690-b5ee-41ba-9f07-589709b20aef)
+  - get_customer -> shopify-get-customer (4b053c97-e239-4211-8b66-5216f6f94f14)
+note: >
+  Confirmation agent. Triggered by order.created (emitted by shopify-webhook from
+  Shopify orders/create). Two paths: confirm (tag confermato) or modify address
+  (collect + update_order). Proactive send in observer mode needs verification with
+  the real number; today it can't be tested on the sandbox (no WABA).

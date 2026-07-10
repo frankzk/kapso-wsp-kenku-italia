@@ -1,0 +1,135 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "type": "flow-node",
+      "position": {
+        "x": 140,
+        "y": 80
+      },
+      "data": {
+        "node_type": "start",
+        "config": {}
+      }
+    },
+    {
+      "id": "agent_1783650424776",
+      "type": "flow-node",
+      "position": {
+        "x": 140,
+        "y": 320
+      },
+      "data": {
+        "node_type": "agent",
+        "config": {
+          "system_prompt": "Sei l'assistente di Kenku Italia su WhatsApp. È appena stato creato un ordine e il tuo compito è farlo CONFERMARE al cliente. Parli SEMPRE in italiano, tono casual e cordiale (dai del tu).\n\nDettagli dell'ordine (dal trigger):\n- Numero ordine: {{context.event.properties.order_number}}\n- Totale: {{context.event.properties.total_price}} {{context.event.properties.currency}} (pagamento in contrassegno)\n- Cliente: {{context.event.properties.customer_name}}\n- order_id (per gli strumenti): {{context.event.properties.order_id}}\n\nCosa fare:\n1. Saluta il cliente e mostra un breve riepilogo: numero ordine, totale, pagamento alla consegna (contrassegno, contanti), spedizione gratuita, consegna in 2-4 giorni.\n2. Chiedi di scegliere fra due opzioni: **\"Confermo l'ordine\"** oppure **\"Modifica indirizzo/dati\"**.\n3. Se CONFERMA: chiama `update_order` con l'order_id e `tags` = \"whatsapp,confermato\". Poi ringrazia e ricorda: consegna in 2-4 giorni, si paga in contanti alla consegna.\n4. Se vuole MODIFICARE indirizzo/dati: raccogli i nuovi dati (nome e cognome, indirizzo completo, città, provincia, CAP, telefono), poi chiama `update_order` con l'order_id e lo `shipping_address` aggiornato. Conferma la modifica al cliente.\n5. Usa `handoff_to_human` per reclami, richieste di annullamento o cose che non puoi gestire.\n\nMessaggi brevi, adatti a WhatsApp. Quando hai finito, chiama `complete_task`.",
+          "provider_model_id": "b693f3fc-350f-45b6-8e8f-088d510b7f5c",
+          "max_iterations": 15,
+          "temperature": 0.3,
+          "message_delivery_mode": "auto_send_assistant_text",
+          "enabled_default_tools": [
+            "complete_task",
+            "handoff_to_human",
+            "get_whatsapp_context"
+          ],
+          "flow_agent_function_tools": [
+            {
+              "name": "update_order",
+              "description": "Aggiorna un ordine esistente: indirizzo di spedizione, contatto, note o tag.",
+              "function_id": "ad31e690-b5ee-41ba-9f07-589709b20aef",
+              "function_name": "shopify-update-order",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": [
+                      "integer",
+                      "string"
+                    ],
+                    "description": "id dell'ordine da aggiornare"
+                  },
+                  "shipping_address": {
+                    "type": "object",
+                    "properties": {
+                      "first_name": {
+                        "type": "string"
+                      },
+                      "last_name": {
+                        "type": "string"
+                      },
+                      "address1": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "province": {
+                        "type": "string"
+                      },
+                      "zip": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "order_id"
+                ]
+              }
+            },
+            {
+              "name": "get_customer",
+              "description": "Cerca il cliente per telefono/email/id.",
+              "function_id": "4b053c97-e239-4211-8b66-5216f6f94f14",
+              "function_name": "shopify-get-customer",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "phone": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "customer_id": {
+                    "type": "integer"
+                  },
+                  "include_orders": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          ],
+          "flow_agent_webhooks": [],
+          "flow_agent_mcp_servers": []
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "start",
+      "target": "agent_1783650424776",
+      "label": "next"
+    }
+  ]
+}
