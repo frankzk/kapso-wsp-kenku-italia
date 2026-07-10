@@ -79,6 +79,13 @@ Deploy these via the dashboard (paste `index.js`, deploy, then add secrets):
   so money math never depends on the LLM. Offer mode needs one line item by variant_id.
 - **`shopify-search-products`** — list/search active products with variants and prices
   for the agent to quote live.
+- **`shopify-update-order`** — update an existing order's shipping address / contact /
+  note / tags (used by the confirmation flow's "Modifica dati" branch).
+- **`shopify-webhook`** (PUBLIC) — receives Shopify webhooks, verifies the HMAC, and
+  emits Kapso project events: `orders/create` → `order.created`,
+  `checkouts/create|update` → `checkout.created|updated`. Extra secrets:
+  `SHOPIFY_WEBHOOK_SECRET` (Shopify webhook signing secret) and `KAPSO_API_KEY`
+  (to POST `/platform/v1/events`).
 
 Both take secrets `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_ITALIA_ADMIN_TOKEN`, and optional
 `SHOPIFY_API_VERSION` (default `2025-07`).
