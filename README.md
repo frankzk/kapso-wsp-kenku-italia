@@ -72,6 +72,13 @@ Deploy these via the dashboard (paste `index.js`, deploy, then add secrets):
   `customer_id`; optionally include recent orders. Read-only.
 - **`shopify-create-order`** — create a **firm** order (`POST /orders.json`), reserving
   inventory by default. Does not email the customer unless `send_receipt: true`.
+  Payment is contrassegno (COD) → order left `financial_status: pending`.
+  Supports quantity offers via `offer: "1" | "3x2" | "5x3"`: since offers are not
+  Shopify variants, the function forces the quantity and applies a **server-computed
+  fixed discount** from the real variant price (3x2 → qty 3 pay 2; 5x3 → qty 5 pay 3),
+  so money math never depends on the LLM. Offer mode needs one line item by variant_id.
+- **`shopify-search-products`** — list/search active products with variants and prices
+  for the agent to quote live.
 
 Both take secrets `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_ITALIA_ADMIN_TOKEN`, and optional
 `SHOPIFY_API_VERSION` (default `2025-07`).
