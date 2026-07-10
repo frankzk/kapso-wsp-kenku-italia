@@ -1,0 +1,192 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "type": "flow-node",
+      "position": {
+        "x": 140,
+        "y": 80
+      },
+      "data": {
+        "node_type": "start",
+        "config": {}
+      }
+    },
+    {
+      "id": "agent_1783648875734",
+      "type": "flow-node",
+      "position": {
+        "x": 140,
+        "y": 320
+      },
+      "data": {
+        "node_type": "agent",
+        "config": {
+          "system_prompt": "Sei l'assistente WhatsApp di **Kenku Italia**, un e-commerce di prodotti per il benessere. Parli SEMPRE in italiano, con un tono casual, cordiale e amichevole (dai del tu). Sei bravo a vendere ma mai aggressivo o insistente.\n\n# Obiettivo\nAiutare il cliente a scegliere un prodotto e completare un ordine in **contrassegno** (pagamento alla consegna).\n\n# Catalogo e prezzi\n- Usa SEMPRE lo strumento `search_products` per prezzi, prodotti e disponibilità reali. NON inventare mai prezzi o prodotti.\n- Vendi solo prodotti disponibili. Se un prodotto non c'è o non lo trovi, non promettere nulla.\n\n# Offerte quantità\n- 1 pezzo: prezzo pieno.\n- **3x2**: paghi 2, prendi 3.\n- **5x3**: paghi 3, prendi 5.\nProponi con naturalezza le offerte 3x2 e 5x3 per far risparmiare il cliente. Il calcolo del prezzo lo fa in automatico lo strumento `create_order` (passa il campo `offer`): tu NON devi calcolare sconti a mano.\nATTENZIONE: alcuni prodotti hanno già un'offerta nel titolo (es. \"Offerta 2x1\"). Su quelli il prezzo è già finale: NON applicare 3x2/5x3.\n\n# Spedizione e pagamento\n- Spedizione **GRATUITA** in tutta Italia. Consegna in **2-4 giorni**.\n- Pagamento **alla consegna (contrassegno)**, SOLO in **contanti** al corriere. Nessun costo extra per il contrassegno.\n\n# Zone escluse (IMPORTANTE)\nNON spediamo in contrassegno in **Sardegna** e **Sicilia**.\n- Province Sardegna: Cagliari, Sassari, Nuoro, Oristano, Sud Sardegna (CAP 07xxx, 08xxx, 09xxx).\n- Province Sicilia: Palermo, Catania, Messina, Siracusa, Ragusa, Trapani, Agrigento, Caltanissetta, Enna (CAP 90xxx-98xxx).\nSe il cliente è di queste zone: NON creare l'ordine. Spiega gentilmente che lì non facciamo contrassegno e passa a un operatore con lo strumento `handoff_to_human` (l'operatore invierà un link di pagamento con carta).\n\n# Dati obbligatori per l'ordine\nRaccogli in modo naturale (poche domande alla volta):\n- Nome e cognome\n- Telefono\n- Indirizzo completo (via e numero)\n- Città\n- Provincia\n- CAP\n- Prodotto e quantità (o offerta 3x2 / 5x3)\n- Eventuali note per il corriere\nPuoi usare `get_customer` con il numero di telefono per vedere se è già un cliente e velocizzare.\n\n# Conferma dell'ordine\nPrima di creare l'ordine, mostra SEMPRE un riepilogo chiaro:\nprodotto, quantità/offerta, **prezzo totale**, indirizzo di consegna, e \"pagamento in contrassegno (contanti)\".\nPoi chiedi conferma esplicita. Crea l'ordine SOLO quando il cliente conferma (dice \"Sì\", \"Confermo\" o simili).\n\n# Creare l'ordine\nUsa `create_order`:\n- `line_items`: il `variant_id` del prodotto scelto (da `search_products`) e la quantità.\n- `offer`: \"1\", \"3x2\" o \"5x3\".\n- `shipping_address`: nome, cognome, indirizzo, città, provincia, CAP, country \"Italy\", telefono.\n- `note`: le note per il corriere.\n- `tags`: \"whatsapp\".\nNon inviare email al cliente. Dopo la creazione, conferma il **numero d'ordine** e ricorda: \"consegna in 2-4 giorni, si paga alla consegna in contanti\".\n\n# Passa a un operatore (handoff_to_human) quando:\n- Reclamo o lamentela.\n- Richiesta di modifica indirizzo di un ordine già effettuato.\n- Annullamento di un ordine.\n- Domanda su un prezzo che non trovi nel catalogo.\n- Cliente arrabbiato o insoddisfatto.\n- Zona esclusa (Sardegna/Sicilia).\n\n# Regole generali\n- Non promettere ciò che non è vero. Se non sai un prezzo, usa lo strumento o passa a un operatore.\n- Sii conciso: messaggi brevi, adatti a WhatsApp.\n- Quando l'ordine è completato o la conversazione si chiude, chiama `complete_task`.\n",
+          "provider_model_id": "b693f3fc-350f-45b6-8e8f-088d510b7f5c",
+          "max_iterations": 20,
+          "temperature": 0.3,
+          "message_delivery_mode": "auto_send_assistant_text",
+          "enabled_default_tools": [
+            "complete_task",
+            "handoff_to_human",
+            "get_whatsapp_context",
+            "get_current_datetime"
+          ],
+          "flow_agent_function_tools": [
+            {
+              "name": "search_products",
+              "description": "Cerca/elenca i prodotti attivi con varianti e prezzi reali dello store Kenku Italia. Usalo per quotare prezzi e disponibilità.",
+              "function_id": "9e9035eb-720f-4015-8c2a-89c0f63d1543",
+              "function_name": "shopify-search-products",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "testo per filtrare i prodotti per titolo (opzionale)"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "numero massimo di prodotti"
+                  }
+                }
+              }
+            },
+            {
+              "name": "get_customer",
+              "description": "Cerca un cliente per telefono, email o id; opzionalmente con gli ordini recenti.",
+              "function_id": "4b053c97-e239-4211-8b66-5216f6f94f14",
+              "function_name": "shopify-get-customer",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "description": "telefono in formato internazionale, es +39..."
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "customer_id": {
+                    "type": "integer"
+                  },
+                  "include_orders": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            {
+              "name": "create_order",
+              "description": "Crea un ordine reale (contrassegno) nello store. Applica le offerte 3x2/5x3 in automatico dal campo offer (calcolo prezzo lato server).",
+              "function_id": "3756cd0f-3a57-4419-b574-3069561b9a39",
+              "function_name": "shopify-create-order",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "line_items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "variant_id": {
+                          "type": "integer",
+                          "description": "variant_id del prodotto (da search_products)"
+                        },
+                        "quantity": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "variant_id",
+                        "quantity"
+                      ]
+                    }
+                  },
+                  "offer": {
+                    "type": "string",
+                    "enum": [
+                      "1",
+                      "3x2",
+                      "5x3"
+                    ],
+                    "description": "offerta quantità"
+                  },
+                  "customer": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "first_name": {
+                        "type": "string"
+                      },
+                      "last_name": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "shipping_address": {
+                    "type": "object",
+                    "properties": {
+                      "first_name": {
+                        "type": "string"
+                      },
+                      "last_name": {
+                        "type": "string"
+                      },
+                      "address1": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "province": {
+                        "type": "string"
+                      },
+                      "zip": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "note": {
+                    "type": "string",
+                    "description": "note per il corriere"
+                  },
+                  "tags": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line_items"
+                ]
+              }
+            }
+          ],
+          "flow_agent_webhooks": [],
+          "flow_agent_mcp_servers": []
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "start",
+      "target": "agent_1783648875734",
+      "label": "next"
+    }
+  ]
+}

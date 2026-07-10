@@ -1,0 +1,19 @@
+# Kapso workflow — created via the Platform API (automate-whatsapp skill scripts),
+# not via `kapso push` (CLI function/workflow push needs a user login this sandbox
+# can't do). This dir is the source-of-truth copy of the deployed graph.
+name: Kenku Italia - Vendite WhatsApp
+slug: kenku-italia-vendite-whatsapp
+workflow_id: e79e50a7-30ed-45e6-b4dd-aa5d58590518
+status: draft            # activate in the dashboard (or update-workflow-settings) when ready
+definition: definition.json
+model: claude-sonnet-5    # provider_model_id b693f3fc-350f-45b6-8e8f-088d510b7f5c
+trigger:
+  id: 35fb073d-842a-4eac-b555-4d2457f6f112
+  type: inbound_message
+  phone_number_id: "597907523413541"   # Sandbox WhatsApp
+  active: false          # enable when going live
+agent_tools:
+  - search_products  -> function shopify-search-products (9e9035eb-720f-4015-8c2a-89c0f63d1543)
+  - get_customer     -> function shopify-get-customer   (4b053c97-e239-4211-8b66-5216f6f94f14)
+  - create_order     -> function shopify-create-order   (3756cd0f-3a57-4419-b574-3069561b9a39)
+  - handoff_to_human (default tool)
