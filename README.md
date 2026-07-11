@@ -121,3 +121,36 @@ Verified: **`runtime_config` is NOT exposed to `env`.** Setting a value in
 dashboard **Secrets** feed `env`. So the Shopify domain/token/version must be added in
 the Secrets tab, per function. (Also: the raw Platform API blocks non-curl clients
 with Cloudflare error 1010 — deploy scripts should use curl.)
+
+## Warming & go-live switches
+
+Strategy: warm the WhatsApp number with ORGANIC inbound first (real conversations,
+high quality) BEFORE any proactive template sending. Keep the proactive flows OFF
+until the number's quality rating is stable/green, or Meta may throttle/ban it.
+
+State today (safe for warming):
+- Flow 1 Vendite (inbound) — ACTIVE. Only replies to people who message first
+  (session messages, media, buttons). No template risk.
+- Flow 2 Conferma & Flow 3 Carrello — DRAFT, triggers INACTIVE. Nothing fires.
+- No WhatsApp templates created.
+
+When the number is warm + you have a real WABA + approved templates, flip each flow
+on (automate-whatsapp scripts; KAPSO_API_BASE_URL=https://api.kapso.ai, KAPSO_API_KEY):
+
+```
+# Flow 2 — Conferma Ordine
+node scripts/update-trigger.js --trigger-id 3065b0ca-77a9-4f35-b566-14016283562a --active true
+node scripts/update-workflow-settings.js cc189d57-d3b8-44b7-a166-e9d49b46f2e4 --lock-version <n> --status active
+
+# Flow 3 — Carrello Abbandonato (swap send_text -> send_template first)
+node scripts/update-trigger.js --trigger-id df3f3411-8b64-4dc7-bf53-a7cc08a264d0 --active true
+node scripts/update-workflow-settings.js 0fd05aa0-04d2-4aa5-b00d-eaf5d09f9936 --lock-version <n> --status active
+```
+
+To pause any flow: same commands with `--active false` / `--status draft`.
+
+### Inbound entry points (so organic chats reach the bot)
+The Sandbox number cannot receive messages from real customers. To get organic
+inquiry chats you need a real WABA number connected to Kapso, then repoint Flow 1's
+inbound_message trigger to it, and publish entry points: wa.me/<number> link, a chat
+button on the website, IG/FB "Message" button, and click-to-WhatsApp ads.
