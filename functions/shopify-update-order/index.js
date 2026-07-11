@@ -31,11 +31,11 @@ async function handler(request, env) {
   if (!orderId) return json({ ok: false, error: "order_id is required" }, 200);
 
   const order = { id: orderId };
-  if (input.shipping_address) order.shipping_address = input.shipping_address;
-  if (input.email) order.email = input.email;
-  if (input.phone) order.phone = input.phone;
-  if (input.note) order.note = input.note;
-  if (input.tags) order.tags = input.tags;
+  if (input.shipping_address !== undefined) order.shipping_address = input.shipping_address;
+  if (input.email !== undefined) order.email = input.email;
+  if (input.phone !== undefined) order.phone = input.phone;
+  if (input.note !== undefined) order.note = input.note;   // "" clears the note
+  if (input.tags !== undefined) order.tags = input.tags;   // "" clears the tags
 
   if (Object.keys(order).length === 1) {
     return json({ ok: false, error: "nothing to update: provide shipping_address, email, phone, note or tags" }, 200);
@@ -84,10 +84,16 @@ function resolveInput(body) {
   return body || {};
 }
 
+function pickEnv(env, name) {
+  if (env && env[name] != null) return env[name];
+  for (const k of Object.keys(env || {})) if (k.trim() === name) return env[k];
+  return undefined;
+}
+
 function readConfig(env) {
-  const domain = env.SHOPIFY_STORE_DOMAIN;
-  const token = env.SHOPIFY_ITALIA_ADMIN_TOKEN;
-  const version = env.SHOPIFY_API_VERSION || "2025-07";
+  const domain = (pickEnv(env, "SHOPIFY_STORE_DOMAIN") || "").trim();
+  const token = (pickEnv(env, "SHOPIFY_ITALIA_ADMIN_TOKEN") || "").trim();
+  const version = (pickEnv(env, "SHOPIFY_API_VERSION") || "2025-07").trim();
   if (!domain) return { error: "missing SHOPIFY_STORE_DOMAIN secret" };
   if (!token) return { error: "missing SHOPIFY_ITALIA_ADMIN_TOKEN secret" };
   return { domain, token, version };
