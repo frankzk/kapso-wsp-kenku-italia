@@ -5,9 +5,10 @@
 // optional SHOPIFY_API_VERSION (default 2025-07).
 //
 // Input (root or body.input for agent tools):
-//   {}                          -> list active products (up to `limit`, default 50)
+//   {}                          -> list active products (up to `limit`, default 20)
 //   { "query": "shilajit" }     -> case-insensitive filter on product title
-//   { "limit": 100 }
+//   { "limit": 50 }             -> max products to RETURN (after filtering)
+//   { "include_drafts": true }  -> also include non-active products (default false)
 //
 // Returns: { ok, count, products: [{ id, title, status, variants: [
 //   { id, title, price, sku, available, inventory_quantity } ] }] }
@@ -19,15 +20,20 @@ async function handler(request, env) {
   const body = await request.json().catch(() => ({}));
   const input = resolveInput(body);
   const query = (input.query || "").toString().trim().toLowerCase();
-  const limit = clampInt(input.limit, 1, 250, 50);
+  const limit = clampInt(input.limit, 1, 250, 20);
+  const includeDrafts = input.include_drafts === true;
 
   const api = shopifyApi(cfg);
   try {
-    const r = await api.get(`/products.json?limit=${limit}`);
+    // Always fetch a full page so filtering by query works across the whole catalog
+    // (the store has few products). Filtering/limit are applied AFTER the fetch.
+    const r = await api.get(`/products.json?limit=250`);
     if (!r.ok) return json({ ok: false, error: "shopify error", shopify_status: r.status, detail: r.body }, 200);
 
     let products = (r.body.products ?? []).map(slimProduct);
+    if (!includeDrafts) products = products.filter((p) => p.status === "active");
     if (query) products = products.filter((p) => (p.title || "").toLowerCase().includes(query));
+    products = products.slice(0, limit);
 
     return json({ ok: true, count: products.length, products }, 200);
   } catch (e) {
