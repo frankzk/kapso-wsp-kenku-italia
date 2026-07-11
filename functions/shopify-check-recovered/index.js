@@ -67,10 +67,16 @@ function normalizePhone(p) {
   return String(p).replace(/[^\d]/g, "").replace(/^0+/, "");
 }
 
+function pickEnv(env, name) {
+  if (env && env[name] != null) return env[name];
+  for (const k of Object.keys(env || {})) if (k.trim() === name) return env[k];
+  return undefined;
+}
+
 function readConfig(env) {
-  const domain = env.SHOPIFY_STORE_DOMAIN;
-  const token = env.SHOPIFY_ITALIA_ADMIN_TOKEN;
-  const version = env.SHOPIFY_API_VERSION || "2025-07";
+  const domain = (pickEnv(env, "SHOPIFY_STORE_DOMAIN") || "").trim();
+  const token = (pickEnv(env, "SHOPIFY_ITALIA_ADMIN_TOKEN") || "").trim();
+  const version = (pickEnv(env, "SHOPIFY_API_VERSION") || "2025-07").trim();
   if (!domain) return { error: "missing SHOPIFY_STORE_DOMAIN secret" };
   if (!token) return { error: "missing SHOPIFY_ITALIA_ADMIN_TOKEN secret" };
   return { domain, token, version };
