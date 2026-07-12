@@ -28,14 +28,15 @@
 
 async function handler(request, env) {
   const apiKey = env.KAPSO_API_KEY;
-  const phoneNumberId = pickPhoneNumberId(body) || env.WHATSAPP_PHONE_NUMBER_ID;
   const base = env.KAPSO_PROXY_BASE_URL || "https://api.kapso.ai/meta/whatsapp";
   const version = env.WHATSAPP_GRAPH_VERSION || "v23.0";
   if (!apiKey) return json({ ok: false, error: "missing KAPSO_API_KEY secret" }, 200);
-  if (!phoneNumberId) return json({ ok: false, error: "no phone_number_id (set WHATSAPP_PHONE_NUMBER_ID or ensure conversation context)" }, 200);
 
   const body = await request.json().catch(() => ({}));
   const input = (body.input && typeof body.input === "object") ? body.input : body;
+
+  const phoneNumberId = pickPhoneNumberId(body) || env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!phoneNumberId) return json({ ok: false, error: "no phone_number_id (set WHATSAPP_PHONE_NUMBER_ID or ensure conversation context)" }, 200);
 
   const bodyText = (input.body_text || input.text || "").toString().trim();
   if (!bodyText) return json({ ok: false, error: "body_text is required" }, 200);
