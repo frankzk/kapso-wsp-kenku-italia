@@ -28,10 +28,11 @@
 
 async function handler(request, env) {
   const apiKey = env.KAPSO_API_KEY;
-  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID || "597907523413541";
+  const phoneNumberId = pickPhoneNumberId(body) || env.WHATSAPP_PHONE_NUMBER_ID;
   const base = env.KAPSO_PROXY_BASE_URL || "https://api.kapso.ai/meta/whatsapp";
   const version = env.WHATSAPP_GRAPH_VERSION || "v23.0";
   if (!apiKey) return json({ ok: false, error: "missing KAPSO_API_KEY secret" }, 200);
+  if (!phoneNumberId) return json({ ok: false, error: "no phone_number_id (set WHATSAPP_PHONE_NUMBER_ID or ensure conversation context)" }, 200);
 
   const body = await request.json().catch(() => ({}));
   const input = (body.input && typeof body.input === "object") ? body.input : body;
@@ -88,6 +89,16 @@ async function handler(request, env) {
   } catch (e) {
     return json({ ok: false, error: "unhandled", detail: String(e) }, 200);
   }
+}
+
+function pickPhoneNumberId(body) {
+  const i = (body.input && typeof body.input === "object") ? body.input : {};
+  const ec = body.execution_context || {};
+  const ctx = ec.context || {};
+  const wa = body.whatsapp_context || {};
+  const conv = wa.conversation || {};
+  return i.phone_number_id || ctx.phone_number_id || ctx.whatsapp_phone_number_id ||
+         conv.phone_number_id || conv.whatsapp_phone_number_id || null;
 }
 
 function pickRecipient(input, body) {

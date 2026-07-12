@@ -14,6 +14,10 @@ trigger:
   active: false          # enable when going live
 persona: Giulia (consulente vendite, italiano casual)
 playbook: presentazione prodotto (media-first, prezzo ammortizzato, promo, chiusura presuntiva)
+triggers_inbound:
+  - 1190517924153407  # Kenku Italia 009 (+1 307-312-4009) GREEN - active
+  - 1254353731087891  # Kenku Italia 781 (+1 307-410-3781) - active
+  - 597907523413541   # Sandbox - DISABLED
 agent_tools:
   - search_products  -> function shopify-search-products (9e9035eb-720f-4015-8c2a-89c0f63d1543)
   - get_customer     -> function shopify-get-customer   (4b053c97-e239-4211-8b66-5216f6f94f14)
